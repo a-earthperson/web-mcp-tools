@@ -4,13 +4,13 @@ import pytest
 
 from web_mcp_tools.tools.web.cookies import BrowserRequestOverrides
 from web_mcp_tools.tools.web.request_policy import (
-    WebScrapeHeaderConfig,
-    WebScrapePolicyResolver,
+    WebFetchHeaderConfig,
+    WebFetchPolicyResolver,
 )
 
 
 def test_resolver_returns_empty_headers_when_no_browser_cookies_selector() -> None:
-    resolver = WebScrapePolicyResolver(WebScrapeHeaderConfig())
+    resolver = WebFetchPolicyResolver(WebFetchHeaderConfig())
 
     policy = resolver.resolve(target_url="https://example.com/jobs")
 
@@ -21,8 +21,8 @@ def test_resolver_returns_empty_headers_when_no_browser_cookies_selector() -> No
 
 
 def test_resolver_returns_empty_headers_when_mode_is_off_even_with_selector() -> None:
-    resolver = WebScrapePolicyResolver(
-        WebScrapeHeaderConfig(cookies_from_browser="safari", cookies_mode="off")
+    resolver = WebFetchPolicyResolver(
+        WebFetchHeaderConfig(cookies_from_browser="safari", cookies_mode="off")
     )
 
     policy = resolver.resolve(target_url="https://example.com/private")
@@ -51,8 +51,8 @@ def test_resolver_applies_browser_cookie_and_user_agent(
         _fake_browser_overrides,
     )
 
-    resolver = WebScrapePolicyResolver(
-        WebScrapeHeaderConfig(
+    resolver = WebFetchPolicyResolver(
+        WebFetchHeaderConfig(
             cookies_from_browser="safari",
         )
     )
@@ -78,8 +78,8 @@ def test_resolver_best_effort_falls_back_when_browser_cookie_resolution_fails(
         _raise_browser_overrides,
     )
 
-    resolver = WebScrapePolicyResolver(
-        WebScrapeHeaderConfig(
+    resolver = WebFetchPolicyResolver(
+        WebFetchHeaderConfig(
             cookies_from_browser="safari",
         )
     )
@@ -104,8 +104,8 @@ def test_resolver_required_raises_when_browser_cookie_resolution_fails(
         _raise_browser_overrides,
     )
 
-    resolver = WebScrapePolicyResolver(
-        WebScrapeHeaderConfig(cookies_from_browser="safari", cookies_mode="required")
+    resolver = WebFetchPolicyResolver(
+        WebFetchHeaderConfig(cookies_from_browser="safari", cookies_mode="required")
     )
 
     with pytest.raises(RuntimeError, match="browser unavailable"):
@@ -125,8 +125,8 @@ def test_resolver_best_effort_falls_back_when_required_cookie_header_missing(
         _overrides_without_cookies,
     )
 
-    resolver = WebScrapePolicyResolver(
-        WebScrapeHeaderConfig(cookies_from_browser="safari")
+    resolver = WebFetchPolicyResolver(
+        WebFetchHeaderConfig(cookies_from_browser="safari")
     )
 
     policy = resolver.resolve(target_url="https://example.com/private")
@@ -137,8 +137,8 @@ def test_resolver_best_effort_falls_back_when_required_cookie_header_missing(
 
 
 def test_resolver_required_raises_when_selector_missing() -> None:
-    resolver = WebScrapePolicyResolver(
-        WebScrapeHeaderConfig(cookies_from_browser="", cookies_mode="required")
+    resolver = WebFetchPolicyResolver(
+        WebFetchHeaderConfig(cookies_from_browser="", cookies_mode="required")
     )
 
     with pytest.raises(
@@ -161,8 +161,8 @@ def test_resolver_required_raises_when_required_cookie_header_missing(
         _overrides_without_cookies,
     )
 
-    resolver = WebScrapePolicyResolver(
-        WebScrapeHeaderConfig(cookies_from_browser="safari", cookies_mode="required")
+    resolver = WebFetchPolicyResolver(
+        WebFetchHeaderConfig(cookies_from_browser="safari", cookies_mode="required")
     )
 
     with pytest.raises(ValueError, match="no matching cookie pairs were resolved"):
@@ -170,8 +170,8 @@ def test_resolver_required_raises_when_required_cookie_header_missing(
 
 
 def test_resolver_raises_when_cookies_mode_is_invalid() -> None:
-    resolver = WebScrapePolicyResolver(
-        WebScrapeHeaderConfig(cookies_from_browser="safari", cookies_mode="nope")  # type: ignore[arg-type]
+    resolver = WebFetchPolicyResolver(
+        WebFetchHeaderConfig(cookies_from_browser="safari", cookies_mode="nope")  # type: ignore[arg-type]
     )
 
     with pytest.raises(ValueError, match="Invalid cookies mode"):

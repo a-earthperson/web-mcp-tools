@@ -39,7 +39,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="web-mcp-tools")
     sub = parser.add_subparsers(dest="cmd", required=True)
 
-    p_mcp = sub.add_parser("mcp", help="Run the web scrape MCP server")
+    p_mcp = sub.add_parser("mcp", help="Run the web fetch MCP server")
     p_mcp.add_argument(
         "--transport",
         choices=["stdio", "sse", "streamable-http"],
@@ -62,7 +62,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=firecrawl_defaults.cookies_from_browser,
         help=(
             "Extract Cookie/User-Agent from a local browser profile for authenticated "
-            "scrapes. Format: <browser> or <browser>:/path/to/profile/file. "
+            "fetches. Format: <browser> or <browser>:/path/to/profile/file. "
             "Currently implemented: safari on macOS (Cookies.binarycookies)."
         ),
     )

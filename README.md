@@ -7,7 +7,7 @@
 [![PyPI](https://img.shields.io/pypi/v/web-mcp-tools)](https://pypi.org/project/web-mcp-tools/)
 [![GHCR Tags](https://ghcr-badge.egpl.dev/a-earthperson/web-mcp-tools/tags?ignore=latest,sha256*&n=3&label=ghcr%20tags)](https://github.com/a-earthperson/web-mcp-tools/pkgs/container/web-mcp-tools)
 
-Standalone MCP server and Python package for Firecrawl-backed web scraping with optional browser-cookie request headers.
+Standalone MCP server and Python package for Firecrawl-backed web fetching with optional browser-cookie request headers.
 
 ## Install
 
@@ -19,7 +19,7 @@ uv sync --extra dev
 
 - `FIRECRAWL_BASE_URL`: Firecrawl API base URL.
 - `FIRECRAWL_API_KEY` or `FIRECRAWL_API_KEY_FILE`: Firecrawl API credential.
-- `WEB_MCP_TOOLS_COOKIES_FROM_BROWSER`: Optional browser selector for authenticated scrapes, for example `safari` or `safari:/path/to/Cookies.binarycookies`.
+- `WEB_MCP_TOOLS_COOKIES_FROM_BROWSER`: Optional browser selector for authenticated fetches, for example `safari` or `safari:/path/to/Cookies.binarycookies`.
 - `WEB_MCP_TOOLS_COOKIES_MODE`: `off`, `best_effort`, or `required`.
 - `WEB_MCP_TOOLS_HOST`: HTTP bind host for MCP HTTP transports.
 - `WEB_MCP_TOOLS_PORT`: HTTP bind port for MCP HTTP transports.

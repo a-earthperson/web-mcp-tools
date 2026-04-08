@@ -1,4 +1,4 @@
-"""MCP server surface for Firecrawl-backed web scraping."""
+"""MCP server surface for Firecrawl-backed web tools."""
 
 from __future__ import annotations
 
@@ -9,13 +9,14 @@ from starlette.applications import Starlette
 from starlette.responses import PlainTextResponse
 
 from web_mcp_tools.config.firecrawl import FirecrawlSettings, load_firecrawl_settings
-from web_mcp_tools.tools.web.scrape import WebScrapeRequestParams, web_scrape
+from web_mcp_tools.tools.web.fetch import WebFetchRequestParams, web_fetch
+from web_mcp_tools.tools.web.search import WebSearchRequestParams, web_search
 
 HttpTransport = Literal["sse", "streamable-http"]
 
 _SERVER_INSTRUCTIONS = (
-    "Expose Firecrawl-backed web scraping as MCP tools with optional "
-    "browser-cookie request policy."
+    "Expose Firecrawl-backed web fetch and search functionality as MCP tools, "
+    "with optional browser-cookie request policy for fetch."
 )
 
 
@@ -39,22 +40,54 @@ def create_mcp_server(
         return PlainTextResponse("ok")
 
     @mcp.tool(
-        name="web_scrape",
+        name="web_fetch",
         description=(
-            "Scrape a single URL to markdown via Firecrawl with optional browser-cookie "
+            "Fetch a single URL to markdown via Firecrawl with optional browser-cookie "
             "header injection configured at server startup."
         ),
     )
-    async def web_scrape_tool(
+    async def web_fetch_tool(
         url: str,
         timeout_ms: int = 30000,
         wait_for_ms: int = 3000,
     ) -> dict[str, object]:
-        result = await web_scrape(
-            WebScrapeRequestParams(
+        result = await web_fetch(
+            WebFetchRequestParams(
                 url=url,
                 timeout_ms=timeout_ms,
                 wait_for_ms=wait_for_ms,
+            ),
+            settings=resolved_firecrawl_settings,
+        )
+        return result.model_dump(mode="json")
+
+    @mcp.tool(
+        name="web_search",
+        description=(
+            "Run a Firecrawl search and return structured result buckets grouped "
+            "by source type."
+        ),
+    )
+    async def web_search_tool(
+        query: str,
+        sources: list[str] | None = None,
+        categories: list[str] | None = None,
+        limit: int = 5,
+        tbs: str | None = None,
+        location: str | None = None,
+        ignore_invalid_urls: bool | None = None,
+        timeout_ms: int = 300000,
+    ) -> dict[str, object]:
+        result = await web_search(
+            WebSearchRequestParams(
+                query=query,
+                sources=sources,
+                categories=categories,
+                limit=limit,
+                tbs=tbs,
+                location=location,
+                ignore_invalid_urls=ignore_invalid_urls,
+                timeout_ms=timeout_ms,
             ),
             settings=resolved_firecrawl_settings,
         )

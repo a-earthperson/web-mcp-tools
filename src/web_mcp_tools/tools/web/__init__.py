@@ -1,11 +1,15 @@
-"""Firecrawl-backed web scrape helpers."""
+"""Firecrawl-backed web helpers."""
 
-from .result import Result
-from .scrape import WebScrapeRequestParams, WebScrapeResult, web_scrape
+from __future__ import annotations
+
+from .fetch import WebFetchRequestParams, WebFetchResult, web_fetch
+from .search import WebSearchRequestParams, WebSearchResult, web_search
 
 __all__ = [
-    "Result",
-    "WebScrapeRequestParams",
-    "WebScrapeResult",
-    "web_scrape",
+    "WebFetchRequestParams",
+    "WebFetchResult",
+    "WebSearchRequestParams",
+    "WebSearchResult",
+    "web_fetch",
+    "web_search",
 ]

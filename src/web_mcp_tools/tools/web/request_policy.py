@@ -1,4 +1,4 @@
-"""Composable request policy for Firecrawl-backed web scraping."""
+"""Composable request policy for Firecrawl-backed web fetching."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ _VALID_COOKIES_MODES: set[str] = {"off", "best_effort", "required"}
 
 
 @dataclass(frozen=True)
-class WebScrapeHeaderConfig:
+class WebFetchHeaderConfig:
     """Settings used to build per-request headers."""
 
     cookies_from_browser: str = ""
@@ -20,8 +20,8 @@ class WebScrapeHeaderConfig:
 
 
 @dataclass(frozen=True)
-class WebScrapeRequestPolicy:
-    """Resolved policy for one scrape request."""
+class WebFetchRequestPolicy:
+    """Resolved policy for one fetch request."""
 
     headers: dict[str, str] = field(default_factory=dict)
     cookies_mode: CookiesMode = "best_effort"
@@ -29,23 +29,23 @@ class WebScrapeRequestPolicy:
     fallback_reason: str | None = None
 
 
-class WebScrapePolicyResolver:
+class WebFetchPolicyResolver:
     """Resolve deterministic request headers for one target URL."""
 
-    def __init__(self, config: WebScrapeHeaderConfig):
+    def __init__(self, config: WebFetchHeaderConfig):
         self._config = config
 
     def resolve(
         self,
         *,
         target_url: str,
-    ) -> WebScrapeRequestPolicy:
+    ) -> WebFetchRequestPolicy:
         mode = self._normalized_mode()
         headers: dict[str, str] = {}
         cookie_selector = self._config.cookies_from_browser.strip()
 
         if mode == "off":
-            return WebScrapeRequestPolicy(
+            return WebFetchRequestPolicy(
                 headers=headers,
                 cookies_mode=mode,
                 fallback_reason="browser cookie injection disabled",
@@ -55,7 +55,7 @@ class WebScrapePolicyResolver:
                 raise ValueError(
                     "Cookie mode is 'required' but no --cookies-from-browser selector was configured."
                 )
-            return WebScrapeRequestPolicy(
+            return WebFetchRequestPolicy(
                 headers=headers,
                 cookies_mode=mode,
                 fallback_reason="no browser cookie selector configured",
@@ -69,7 +69,7 @@ class WebScrapePolicyResolver:
         except Exception as exc:
             if mode == "required":
                 raise
-            return WebScrapeRequestPolicy(
+            return WebFetchRequestPolicy(
                 headers=headers,
                 cookies_mode=mode,
                 fallback_reason=f"browser cookie resolution failed: {exc}",
@@ -83,7 +83,7 @@ class WebScrapePolicyResolver:
                 )
             if mode == "required":
                 raise ValueError(reason)
-            return WebScrapeRequestPolicy(
+            return WebFetchRequestPolicy(
                 headers=headers,
                 cookies_mode=mode,
                 fallback_reason=reason,
@@ -91,7 +91,7 @@ class WebScrapePolicyResolver:
         headers["Cookie"] = overrides.cookie_header
         headers["User-Agent"] = overrides.user_agent
 
-        return WebScrapeRequestPolicy(
+        return WebFetchRequestPolicy(
             headers=headers,
             cookies_mode=mode,
             used_browser_cookies=True,

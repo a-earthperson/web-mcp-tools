@@ -16,30 +16,30 @@ from pydantic import (
 
 from web_mcp_tools.config.firecrawl import FirecrawlSettings, load_firecrawl_settings
 from web_mcp_tools.tools.web.request_policy import (
-    WebScrapeHeaderConfig,
-    WebScrapePolicyResolver,
+    WebFetchHeaderConfig,
+    WebFetchPolicyResolver,
 )
 from web_mcp_tools.tools.web.result import Result
 from web_mcp_tools.url import Url
 
 
-def _build_policy_resolver(settings: FirecrawlSettings) -> WebScrapePolicyResolver:
+def _build_policy_resolver(settings: FirecrawlSettings) -> WebFetchPolicyResolver:
     """Build a resolver from current runtime configuration."""
 
-    return WebScrapePolicyResolver(
-        WebScrapeHeaderConfig(
+    return WebFetchPolicyResolver(
+        WebFetchHeaderConfig(
             cookies_from_browser=settings.cookies_from_browser,
             cookies_mode=settings.cookies_mode,
         )
     )
 
 
-class WebScrapeRequestParams(BaseModel):
-    """Validated scrape request configuration."""
+class WebFetchRequestParams(BaseModel):
+    """Validated fetch request configuration."""
 
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
-    url: Url = Field(description="the URL to fetch and scrape")
+    url: Url = Field(description="the URL to fetch")
     timeout_ms: Optional[PositiveInt] = Field(
         default=30000, description="request timeout in milliseconds"
     )
@@ -48,7 +48,7 @@ class WebScrapeRequestParams(BaseModel):
     )
 
     @model_validator(mode="after")
-    def timeout_at_least_twice_wait(self) -> "WebScrapeRequestParams":
+    def timeout_at_least_twice_wait(self) -> "WebFetchRequestParams":
         """Guarantee timeout >= 2 * wait_for_ms."""
 
         wait = self.wait_for_ms or 0
@@ -58,24 +58,24 @@ class WebScrapeRequestParams(BaseModel):
         return self
 
 
-class WebScrapeResult(Result[str]):
-    """Tool-safe result envelope for scrape outcomes."""
+class WebFetchResult(Result[str]):
+    """Tool-safe result envelope for fetch outcomes."""
 
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
-    requested_url: Url = Field(description="source/scraped url")
+    requested_url: Url = Field(description="source/fetched url")
 
 
-async def web_scrape(
-    params: WebScrapeRequestParams,
+async def web_fetch(
+    params: WebFetchRequestParams,
     *,
     settings: FirecrawlSettings | None = None,
-) -> WebScrapeResult:
-    """Scrape a single URL via Firecrawl and return a structured result."""
+) -> WebFetchResult:
+    """Fetch a single URL via Firecrawl and return a structured result."""
 
     runtime_settings = settings or load_firecrawl_settings()
 
-    def fail(*, message: str) -> WebScrapeResult:
-        return WebScrapeResult(
+    def fail(*, message: str) -> WebFetchResult:
+        return WebFetchResult(
             requested_url=params.url,
             payload=None,
             ok=False,
@@ -86,7 +86,7 @@ async def web_scrape(
         request_policy = _build_policy_resolver(runtime_settings).resolve(
             target_url=params.url
         )
-        scraped: Document = await runtime_settings.async_client().scrape(
+        fetched: Document = await runtime_settings.async_client().scrape(
             url=params.url,
             timeout=params.timeout_ms,
             only_main_content=False,
@@ -95,8 +95,8 @@ async def web_scrape(
             formats=["markdown"],
             headers=request_policy.headers or None,
         )
-        return WebScrapeResult(
-            requested_url=params.url, payload=scraped.markdown, ok=True
+        return WebFetchResult(
+            requested_url=params.url, payload=fetched.markdown, ok=True
         )
     except ValidationError as validation:
         return fail(message=str(validation.errors()))

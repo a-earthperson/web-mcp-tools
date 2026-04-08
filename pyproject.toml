@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "web-mcp-tools"
 dynamic = ["version"]
-description = "Firecrawl-backed web scrape MCP server with browser cookie support"
+description = "Firecrawl-backed web fetch MCP server with browser cookie support"
 requires-python = ">=3.14,<3.15"
 readme = "README.md"
 authors = [

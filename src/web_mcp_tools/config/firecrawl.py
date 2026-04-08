@@ -1,4 +1,4 @@
-"""Standalone Firecrawl settings for web scrape tools."""
+"""Standalone Firecrawl settings for web fetch tools."""
 
 from __future__ import annotations
 

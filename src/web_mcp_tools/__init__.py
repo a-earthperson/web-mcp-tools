@@ -1,4 +1,4 @@
-"""Firecrawl-backed web scrape MCP tools with browser cookie support."""
+"""Firecrawl-backed web fetch MCP tools with browser cookie support."""
 
 __all__ = ["__version__"]
 
