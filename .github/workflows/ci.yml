@@ -5,7 +5,6 @@ on:
   push:
     branches:
       - main
-      - master
   workflow_dispatch:
 
 concurrency:
@@ -13,7 +12,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  quality:
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -41,16 +41,33 @@ jobs:
         run: |
           uv run ruff format --check src tests
 
-      - name: Run tests
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install dependencies
         run: |
-          if [ "${{ github.event_name }}" = "push" ] && { [ "${{ github.ref }}" = "refs/heads/main" ] || [ "${{ github.ref }}" = "refs/heads/master" ]; }; then
-            uv run pytest --cov=web_mcp_tools --cov-report=xml --cov-report=term-missing || [ $? -eq 5 ]
-          else
-            uv run pytest || [ $? -eq 5 ]
-          fi
+          uv sync --frozen --extra dev
+
+      - name: Run tests with coverage
+        run: |
+          uv run pytest --cov=web_mcp_tools --cov-report=xml --cov-report=term-missing || [ $? -eq 5 ]
 
       - name: Upload coverage to Codecov
-        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: codecov/codecov-action@v4
         with:
           files: coverage.xml
@@ -59,8 +76,9 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   package:
+    name: Package
     runs-on: ubuntu-latest
-    needs: quality
+    needs: [lint, tests]
     permissions:
       contents: read
     steps:
@@ -121,8 +139,9 @@ jobs:
           path: dist/*
 
   docker-smoke:
+    name: Docker
     runs-on: ubuntu-latest
-    needs: quality
+    needs: [lint, tests]
     permissions:
       contents: read
     steps:
@@ -168,3 +187,19 @@ jobs:
         if: always()
         run: |
           docker compose down --volumes --remove-orphans || true
+
+  ci:
+    name: CI
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [lint, tests, package, docker-smoke]
+    permissions:
+      contents: read
+    steps:
+      - name: Check upstream job results
+        run: |
+          if [ "${{ contains(needs.*.result, 'failure') }}" = "true" ] || [ "${{ contains(needs.*.result, 'cancelled') }}" = "true" ]; then
+            echo "One or more required CI jobs failed or were cancelled."
+            exit 1
+          fi
+          echo "All required CI jobs passed."

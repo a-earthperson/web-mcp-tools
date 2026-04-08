@@ -1,9 +1,11 @@
 # web-mcp-tools
 
-[![Tests](https://github.com/a-earthperson/web-mcp-tools/actions/workflows/tests.yml/badge.svg)](https://github.com/a-earthperson/web-mcp-tools/actions/workflows/tests.yml)
-[![Lint](https://github.com/a-earthperson/web-mcp-tools/actions/workflows/lint.yml/badge.svg)](https://github.com/a-earthperson/web-mcp-tools/actions/workflows/lint.yml)
-[![Coverage](https://github.com/a-earthperson/web-mcp-tools/actions/workflows/coverage.yml/badge.svg)](https://github.com/a-earthperson/web-mcp-tools/actions/workflows/coverage.yml)
-[![Docker](https://github.com/a-earthperson/web-mcp-tools/actions/workflows/docker.yml/badge.svg)](https://github.com/a-earthperson/web-mcp-tools/actions/workflows/docker.yml)
+[![Lint](https://img.shields.io/github/checks-status/a-earthperson/web-mcp-tools/main?checkName=Lint&label=lint)](https://github.com/a-earthperson/web-mcp-tools/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/github/checks-status/a-earthperson/web-mcp-tools/main?checkName=Tests&label=tests)](https://github.com/a-earthperson/web-mcp-tools/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/a-earthperson/web-mcp-tools/branch/main/graph/badge.svg)](https://codecov.io/gh/a-earthperson/web-mcp-tools)
+[![CI](https://img.shields.io/github/checks-status/a-earthperson/web-mcp-tools/main?checkName=CI&label=CI)](https://github.com/a-earthperson/web-mcp-tools/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/web-mcp-tools)](https://pypi.org/project/web-mcp-tools/)
+[![GHCR Tags](https://ghcr-badge.egpl.dev/a-earthperson/web-mcp-tools/tags?ignore=latest,sha256*&n=3&label=ghcr%20tags)](https://github.com/a-earthperson/web-mcp-tools/pkgs/container/web-mcp-tools)
 
 Standalone MCP server and Python package for Firecrawl-backed web scraping with optional browser-cookie request headers.
 
