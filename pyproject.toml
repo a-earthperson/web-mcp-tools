@@ -42,9 +42,6 @@ target-version = ["py314"]
 [tool.hatch.version]
 path = "src/web_mcp_tools/__init__.py"
 
-[tool.hatch.build]
-sources = ["src"]
-
 [tool.hatch.build.targets.wheel]
 packages = ["src/web_mcp_tools"]
 
