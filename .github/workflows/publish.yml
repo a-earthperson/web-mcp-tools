@@ -192,6 +192,9 @@ jobs:
         with:
           context: .
           file: docker/Dockerfile
+          # Publish a multi-arch manifest so Docker pulls the right image
+          # for x86_64, Apple Silicon, and common Raspberry Pi targets.
+          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6,linux/riscv64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
