@@ -1,0 +1,170 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install dependencies
+        run: |
+          uv sync --frozen --extra dev
+
+      - name: Ruff check
+        run: |
+          uv run ruff check src tests
+
+      - name: Ruff format check
+        run: |
+          uv run ruff format --check src tests
+
+      - name: Run tests
+        run: |
+          if [ "${{ github.event_name }}" = "push" ] && { [ "${{ github.ref }}" = "refs/heads/main" ] || [ "${{ github.ref }}" = "refs/heads/master" ]; }; then
+            uv run pytest --cov=web_mcp_tools --cov-report=xml --cov-report=term-missing || [ $? -eq 5 ]
+          else
+            uv run pytest || [ $? -eq 5 ]
+          fi
+
+      - name: Upload coverage to Codecov
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage.xml
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  package:
+    runs-on: ubuntu-latest
+    needs: quality
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Build package
+        run: |
+          uv build --no-sources
+
+      - name: Validate wheel contents
+        run: |
+          uv run python - <<'PY'
+          import glob
+          import zipfile
+
+          wheels = sorted(glob.glob("dist/*.whl"))
+          if not wheels:
+              raise SystemExit("No wheels found in dist/.")
+
+          wheel = wheels[-1]
+          with zipfile.ZipFile(wheel) as zf:
+              names = set(zf.namelist())
+
+          package_files = [n for n in names if n.startswith("web_mcp_tools/")]
+          if not package_files:
+              raise SystemExit("Wheel is missing web_mcp_tools package files.")
+
+          required_files = {
+              "web_mcp_tools/__init__.py",
+              "web_mcp_tools/__main__.py",
+          }
+          missing_required = sorted(required_files - names)
+          if missing_required:
+              raise SystemExit(
+                  f"Wheel is missing required package files: {missing_required}"
+              )
+
+          if not any(n.endswith(".dist-info/entry_points.txt") for n in names):
+              raise SystemExit("Wheel is missing console script entry points metadata.")
+
+          print(f"Validated wheel: {wheel}")
+          print(f"Package files: {len(package_files)}")
+          PY
+
+      - name: Upload package artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/*
+
+  docker-smoke:
+    runs-on: ubuntu-latest
+    needs: quality
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate Docker Compose configuration
+        run: |
+          docker compose config
+
+      - name: Build and start Compose service
+        run: |
+          docker compose up --build -d mcp
+
+      - name: Wait for container healthcheck
+        run: |
+          cid="$(docker compose ps -q mcp)"
+          if [ -z "$cid" ]; then
+            echo "Could not determine container id for mcp service"
+            docker compose ps
+            exit 1
+          fi
+
+          for i in $(seq 1 30); do
+            status="$(docker inspect -f '{{.State.Health.Status}}' "$cid" 2>/dev/null || true)"
+            if [ "$status" = "healthy" ]; then
+              echo "Container is healthy"
+              exit 0
+            fi
+            if [ "$status" = "unhealthy" ]; then
+              echo "Container is unhealthy"
+              docker compose logs mcp
+              exit 1
+            fi
+            sleep 1
+          done
+
+          echo "Container did not become healthy in time"
+          docker compose logs mcp
+          exit 1
+
+      - name: Stop Docker Compose
+        if: always()
+        run: |
+          docker compose down --volumes --remove-orphans || true

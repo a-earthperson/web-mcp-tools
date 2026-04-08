@@ -1,5 +1,10 @@
 # web-mcp-tools
 
+[![Tests](https://github.com/a-earthperson/web-mcp-tools/actions/workflows/tests.yml/badge.svg)](https://github.com/a-earthperson/web-mcp-tools/actions/workflows/tests.yml)
+[![Lint](https://github.com/a-earthperson/web-mcp-tools/actions/workflows/lint.yml/badge.svg)](https://github.com/a-earthperson/web-mcp-tools/actions/workflows/lint.yml)
+[![Coverage](https://github.com/a-earthperson/web-mcp-tools/actions/workflows/coverage.yml/badge.svg)](https://github.com/a-earthperson/web-mcp-tools/actions/workflows/coverage.yml)
+[![Docker](https://github.com/a-earthperson/web-mcp-tools/actions/workflows/docker.yml/badge.svg)](https://github.com/a-earthperson/web-mcp-tools/actions/workflows/docker.yml)
+
 Standalone MCP server and Python package for Firecrawl-backed web scraping with optional browser-cookie request headers.
 
 ## Install
