@@ -107,10 +107,7 @@ def main() -> None:
         cookies_from_browser=args.cookies_from_browser,
         cookies_mode=args.cookies_mode,
     )
-    server = create_mcp_server(
-        server_settings=server_settings,
-        firecrawl_settings=firecrawl_settings,
-    )
+    server = create_mcp_server(firecrawl_settings=firecrawl_settings)
 
     if args.transport == "stdio":
         server.run(transport="stdio")
@@ -127,4 +124,5 @@ def main() -> None:
         port=server_settings.port,
         log_level=server_settings.log_level.lower(),
         path=path,
+        json_response=True,
     )

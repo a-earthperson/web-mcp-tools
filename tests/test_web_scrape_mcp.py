@@ -4,7 +4,6 @@ import pytest
 from starlette.testclient import TestClient
 
 from web_mcp_tools.config.firecrawl import FirecrawlSettings
-from web_mcp_tools.config.server import McpServerSettings
 from web_mcp_tools.mcp.server import create_http_app, create_mcp_server
 from web_mcp_tools.tools.web.scrape import (
     WebScrapeRequestParams,
@@ -97,7 +96,6 @@ async def test_create_mcp_server_exposes_web_scrape_tool(
     monkeypatch.setattr("web_mcp_tools.mcp.server.web_scrape", _fake_web_scrape)
 
     server = create_mcp_server(
-        server_settings=McpServerSettings(),
         firecrawl_settings=FirecrawlSettings(
             api_url="https://firecrawl.example",
             api_key="token",
@@ -116,8 +114,7 @@ async def test_create_mcp_server_exposes_web_scrape_tool(
         },
     )
 
-    assert isinstance(result, tuple)
-    assert result[1] == {
+    assert result.structured_content == {
         "requested_url": "https://example.com/jobs",
         "payload": "page markdown",
         "ok": True,
@@ -127,7 +124,6 @@ async def test_create_mcp_server_exposes_web_scrape_tool(
 
 def test_http_app_exposes_health_endpoint() -> None:
     server = create_mcp_server(
-        server_settings=McpServerSettings(),
         firecrawl_settings=FirecrawlSettings(),
     )
     app = create_http_app(server, transport="streamable-http", path="/mcp")
