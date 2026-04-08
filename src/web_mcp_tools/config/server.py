@@ -46,9 +46,11 @@ def load_mcp_server_settings(
 
     return McpServerSettings(
         host=host or get_env_value("WEB_MCP_TOOLS_HOST", default="127.0.0.1"),
-        port=port
-        if port is not None
-        else get_env_int("WEB_MCP_TOOLS_PORT", default=8000),
+        port=(
+            port
+            if port is not None
+            else get_env_int("WEB_MCP_TOOLS_PORT", default=8000)
+        ),
         mount_path=mount_path or get_env_value("WEB_MCP_TOOLS_MOUNT_PATH", default="/"),
         sse_path=sse_path or get_env_value("WEB_MCP_TOOLS_SSE_PATH", default="/sse"),
         streamable_http_path=streamable_http_path

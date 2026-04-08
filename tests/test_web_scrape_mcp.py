@@ -130,10 +130,12 @@ def test_http_app_exposes_health_endpoint() -> None:
         server_settings=McpServerSettings(),
         firecrawl_settings=FirecrawlSettings(),
     )
-    app = create_http_app(server, transport="streamable-http")
+    app = create_http_app(server, transport="streamable-http", path="/mcp")
 
     with TestClient(app) as client:
         response = client.get("/healthz")
+        options_response = client.options("/mcp")
 
     assert response.status_code == 200
     assert response.text == "ok"
+    assert options_response.status_code != 500

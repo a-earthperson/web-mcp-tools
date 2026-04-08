@@ -6,11 +6,9 @@ import argparse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 
-import uvicorn
-
 from web_mcp_tools.config.firecrawl import load_firecrawl_settings
 from web_mcp_tools.config.server import load_mcp_server_settings
-from web_mcp_tools.mcp.server import create_http_app, create_mcp_server
+from web_mcp_tools.mcp.server import create_mcp_server
 
 
 class _HealthHandler(BaseHTTPRequestHandler):
@@ -118,14 +116,15 @@ def main() -> None:
         server.run(transport="stdio")
         return
 
-    app = create_http_app(
-        server,
-        transport=args.transport,
-        mount_path=server_settings.mount_path,
+    path = (
+        server_settings.sse_path
+        if args.transport == "sse"
+        else server_settings.streamable_http_path
     )
-    uvicorn.run(
-        app,
+    server.run(
+        transport=args.transport,
         host=server_settings.host,
         port=server_settings.port,
         log_level=server_settings.log_level.lower(),
+        path=path,
     )

@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
 from typing import Literal
 
 from mcp.server.fastmcp import FastMCP
 from starlette.applications import Starlette
 from starlette.responses import PlainTextResponse
-from starlette.routing import Mount, Route
+from starlette.routing import Mount
 
 from web_mcp_tools.config.firecrawl import FirecrawlSettings, load_firecrawl_settings
 from web_mcp_tools.config.server import McpServerSettings, load_mcp_server_settings
@@ -19,10 +20,6 @@ _SERVER_INSTRUCTIONS = (
     "Expose Firecrawl-backed web scraping as MCP tools with optional "
     "browser-cookie request policy."
 )
-
-
-async def _healthcheck(_request) -> PlainTextResponse:
-    return PlainTextResponse("ok")
 
 
 def create_mcp_server(
@@ -44,6 +41,14 @@ def create_mcp_server(
         log_level=resolved_server_settings.log_level,
         json_response=True,
     )
+
+    @mcp.custom_route("/health", methods=["GET"], include_in_schema=False)
+    async def healthcheck(_request) -> PlainTextResponse:
+        return PlainTextResponse("ok")
+
+    @mcp.custom_route("/healthz", methods=["GET"], include_in_schema=False)
+    async def healthcheck_z(_request) -> PlainTextResponse:
+        return PlainTextResponse("ok")
 
     @mcp.tool(
         name="web_scrape",
@@ -75,17 +80,21 @@ def create_http_app(
     server: FastMCP,
     *,
     transport: HttpTransport,
-    mount_path: str | None = None,
+    path: str | None = None,
 ) -> Starlette:
     if transport == "streamable-http":
         mcp_app = server.streamable_http_app()
     else:
-        mcp_app = server.sse_app(mount_path=mount_path)
+        mcp_app = server.sse_app(mount_path=path)
+
+    @asynccontextmanager
+    async def app_lifespan(app: Starlette):
+        async with mcp_app.router.lifespan_context(mcp_app):
+            yield
 
     return Starlette(
+        lifespan=app_lifespan,
         routes=[
-            Route("/health", endpoint=_healthcheck),
-            Route("/healthz", endpoint=_healthcheck),
             Mount("/", app=mcp_app),
-        ]
+        ],
     )
